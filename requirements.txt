@@ -1,0 +1,2 @@
+spotipy~=2.20.0
+DateTime~=4.6

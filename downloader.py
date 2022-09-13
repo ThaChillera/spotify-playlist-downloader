@@ -3,66 +3,66 @@
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 
-import xspf_lib as xspf
 import datetime
 from pathlib import Path
+
+import json
+import sys
+
+class Track:
+    name = None
+    album = None
+    artists = None
+
+    def __init__(self, track):
+        self.name = track['name']
+        self.album = Album(track['album']).__dict__
+        self.artists = list(map(lambda artist: artist['name'], track['artists']))
+
+class Album:
+    name = None
+    release_date = None
+
+    def __init__(self, album):
+        self.name = album['name']
+        self.release_date = album['release_date']
 
 def playlistsOfUser(username):
     now = datetime.date.today()
     directory = f'{username}/{now.year}/{now.month}/{now.day}'
     Path(directory).mkdir(parents=True, exist_ok=True)
     playlists = sp.user_playlists(user)
+
     while playlists:
         for i, playlist in enumerate(playlists['items']):
-            result = getXSFPlaylistFromPlaylist(playlist)
-
-            f = open(f'{directory}/{playlist["name"]}.xsfp', "w")
-            f.write(result.xml_string())
+            playlistTracks = getTracksFrom(playlist)
+            f = open(f'{directory}/{playlist["name"]}.json', "w")
+            f.write(json.dumps(playlistTracks))
             f.close()
+
         if playlists['next']:
             playlists = sp.next(playlists)
         else:
             playlists = None
 
 
-def getXSFPlaylistFromPlaylist(playlist):
-    xsfptracks = []
-    playlistTracks = sp.playlist_tracks(playlist['id'])
-    while playlistTracks:
-        for i, playlistTrack in enumerate(playlistTracks['items']):
-            if (playlistTrack['track'] is None) :
-                continue
-            xsfptracks.append(getInfoFromPlaylistTrack(playlistTrack))
-        if playlistTracks['next']:
-            playlistTracks = sp.next(playlistTracks)
-        else:
-            playlistTracks = None
+def getTracksFrom(playlist):
+    offset = 0
 
-    return xspf.Playlist(title=playlist['name'],
-                             creator=playlist['owner']['display_name'],
-                             annotation=playlist['description'],
-                             location=playlist['external_urls']['spotify'],
-                             identifier=playlist['uri'],
-                             image=[playlist['images'][0]['url'] if len(playlist['images']) else None][0],
-                             trackList=xsfptracks)
+    playlistTracks = []
+    while True:
+        response = sp.playlist_items(playlist['id'], offset=offset)
 
+        if (response is None) or len(response['items']) == 0:
+            return playlistTracks
 
-def getInfoFromPlaylistTrack(playlistTrack):
-    track = playlistTrack['track']
+        offset = offset + len(response['items'])
 
-    return xspf.Track(location=f'file://../artists/' +
-                                    f'{track["artists"][0]["name"]}/' +
-                                    f'{track["album"]["name"]}' +
-                                    f'{[" (" + track["album"]["release_date"][:4] + ")" if track["album"]["release_date"] else ""]}/' +
-                                    f'{track["name"]}.flac',
-                              title=track['name'],
-                              creator=','.join([artist['name'] for artist in track['artists']]),
-                              album=track['album']['name'],
-                              trackNum=[track['track_number'] if track['track_number'] else None][0],
-                              duration=track['duration_ms'],
-                              image=[track['album']['images'][0]['url'] if len(track['album']['images']) else None][0])
+        for i, item in enumerate(response['items']):
+            playlistTracks.append(Track(item['track']).__dict__)
+
 
 sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials())
-user = 'aboxofwine'
 
-playlistsOfUser(user)
+for i, user in enumerate(sys.argv[1:]):
+    playlistsOfUser(user)
