@@ -28,15 +28,14 @@ class Album:
         self.release_date = album['release_date']
 
 def playlistsOfUser(username):
-    now = datetime.date.today()
-    directory = f'{username}/{now.year}/{now.month}/{now.day}'
-    Path(directory).mkdir(parents=True, exist_ok=True)
     playlists = sp.user_playlists(user)
 
     while playlists:
         for i, playlist in enumerate(playlists['items']):
             playlistTracks = getTracksFrom(playlist)
-            f = open(f'{directory}/{playlist["name"]}.json', "w")
+            directory = f'{username}/{playlist["name"]}'
+            Path(directory).mkdir(parents=True, exist_ok=True)
+            f = open(f'{directory}/{now.isoformat()}.json', "w")
             f.write(json.dumps(playlistTracks))
             f.close()
 
@@ -62,6 +61,7 @@ def getTracksFrom(playlist):
             playlistTracks.append(Track(item['track']).__dict__)
 
 
+now = datetime.date.today()
 sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials())
 
 for i, user in enumerate(sys.argv[1:]):
