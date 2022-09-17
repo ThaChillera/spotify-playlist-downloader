@@ -27,8 +27,8 @@ class Album:
         self.name = album['name']
         self.release_date = album['release_date']
 
-def playlistsOfUser(username):
-    playlists = sp.user_playlists(user)
+def playlistsOfUser(userId, username):
+    playlists = sp.user_playlists(userId)
 
     while playlists:
         for i, playlist in enumerate(playlists['items']):
@@ -64,5 +64,6 @@ def getTracksFrom(playlist):
 now = datetime.date.today()
 sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials())
 
-for i, user in enumerate(sys.argv[1:]):
-    playlistsOfUser(user)
+for i, userId in enumerate(sys.argv[1:]):
+    username = sp.user(userId)['display_name']
+    playlistsOfUser(userId, username)
