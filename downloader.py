@@ -58,6 +58,9 @@ def getTracksFrom(playlist):
         offset = offset + len(response['items'])
 
         for i, item in enumerate(response['items']):
+            if (item['track'] is None):
+                continue
+
             playlistTracks.append(Track(item['track']).__dict__)
 
 
