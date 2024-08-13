@@ -72,4 +72,5 @@ sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials())
 
 for i, userId in enumerate(sys.argv[1:]):
     username = sp.user(userId)['display_name']
+    print("processing " + username)
     playlistsOfUser(userId, username)
