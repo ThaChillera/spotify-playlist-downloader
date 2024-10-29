@@ -9,6 +9,7 @@ from pathlib import Path
 import json
 import sys
 
+
 class Track:
     name = None
     album = None
@@ -19,6 +20,7 @@ class Track:
         self.album = Album(track['album']).__dict__
         self.artists = list(map(lambda artist: artist['name'], track['artists']))
 
+
 class Album:
     name = None
     release_date = None
@@ -26,6 +28,7 @@ class Album:
     def __init__(self, album):
         self.name = album['name']
         self.release_date = album['release_date']
+
 
 def playlistsOfUser(userId, username):
     playlists = sp.user_playlists(userId)
@@ -58,7 +61,7 @@ def getTracksFrom(playlist):
         offset = offset + len(response['items'])
 
         for i, item in enumerate(response['items']):
-            if (item['track'] is None):
+            if item['track'] is None or item['track']['type'] != 'track':
                 continue
 
             playlistTracks.append(Track(item['track']).__dict__)
