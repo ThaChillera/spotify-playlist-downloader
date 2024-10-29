@@ -33,7 +33,7 @@ def playlistsOfUser(userId, username):
     while playlists:
         for i, playlist in enumerate(playlists['items']):
             playlistTracks = getTracksFrom(playlist)
-            directory = f'{username}/{playlist["name"]}'
+            directory = f'playlists/{username}/{playlist["name"]}'
             Path(directory).mkdir(parents=True, exist_ok=True)
             f = open(f'{directory}/{now.isoformat()}.json', "w")
             f.write(json.dumps(playlistTracks))
